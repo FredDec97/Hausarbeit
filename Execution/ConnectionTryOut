@@ -1,0 +1,14 @@
+import sqlite3 as mdb
+def chk_conn(conn):
+     try:
+        conn.cursor()
+        return True
+     except Exception as ex:
+        return False
+
+myconn = mdb.connect('ForCalc.db')
+myconn.close()
+print(chk_conn(myconn))
+
+myconn.close()
+print(chk_conn(myconn))
