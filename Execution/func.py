@@ -8,7 +8,6 @@ def chk_conn(connx):
         print(e)
         print("No active connection to DB")
 
-
 def connectToDB():
     import sqlalchemy as db
     from sqlalchemy_utils import database_exists, create_database
@@ -24,7 +23,7 @@ def connectToDB():
     conn = engine.connect()
     return engine, base, conn
 
-def readCSVloadData(csvname, tablename, conn, cursor, ccount):
+def readCSVloadData(csvname, tablename, conn, cursor, ccount, scatter):
     import pandas as pd
     from sqlalchemy import desc
     try:
@@ -35,16 +34,15 @@ def readCSVloadData(csvname, tablename, conn, cursor, ccount):
     except FileNotFoundError as e:
         print("File was not found, please save the file with the right name on the right spot")
     else: print("done")
-    plottable(tablename, ccount)
+    if scatter == 1:
+        plottable2(tablename, ccount)
+    else: plottable1(tablename, ccount)  
     print(chk_conn(cursor))
 
 import sqlalchemy as db
 from func import *
 from sqlalchemy import create_engine
-import sqlite3
 class Tabelle():
-    #engine = create_engine('sqlite:///ForCalc.db')
-    #conn = engine.connect()
     tablename = "Tabelenname"
 class FromCSV(Tabelle):
     csvname = "examplecsv"
@@ -148,9 +146,10 @@ def plottable(tablename, columncount):
         tablename,
         con=engine)
 
-    for n in range(2, columncount):
+    for n in range(1, columncount):
         X = table_df.iloc[:,0]
         Y1 = table_df.iloc[:,n]
+        print(n)
         plt.plot(X,Y1, color='#8A0808', linestyle='--',label=('Y' + str(n) ))
     
     plt.title(tablename + "dataset")
@@ -163,7 +162,7 @@ def plottable(tablename, columncount):
 def identifyideal(conn, table_name, table_name2):
     import pandas as pd
     import sklearn.metrics
-    import matplotlib.pyplot as fig
+    import matplotlib.pyplot as plt
     engine = create_engine('sqlite:///ForCalc.db')
     df4 = pd.DataFrame(columns=['Error1','Error2','Error3','Error4'], index=range(1,50))
     for n in range(1, 51):
@@ -177,21 +176,154 @@ def identifyideal(conn, table_name, table_name2):
         mse4 = sklearn.metrics.mean_squared_error(df1.iloc[:,4] , df2.iloc[:,n])
         
         errors = [mse1, mse2, mse3, mse4]
-        #df3 = pd.DataFrame([[mse1, mse2, mse3, mse4]], columns=['Error1','Error2','Error3','Error4'])
-        #df4.append(errors, ignore_index=False)
         df4.loc[n-1] = errors
-    print(df4)
-    minvalue_series = df4.idxmin()
+    minvalue_series = df4.idxmin()+1
+    print(minvalue_series)
+   
+    plt.figure()
+    for x in range(0,4):
+        X = df1.iloc[:,0]
+        Y2 = df2.iloc[:,minvalue_series[x]]
+        plt.plot(X,Y2, color='#0B610B', linestyle='-',label='Bestfit'+ str(x+1))
+        plt.title('Ideal and Test')
+        plt.xlabel('x-Values')
+        plt.ylabel('y-Values')
+        plt.legend()
+        plt.grid(True)
+        plt.show
+        import matplotlib.pyplot as plt
+    import pandas as pd
+
+    engine = create_engine('sqlite:///ForCalc.db')
+    table_df = pd.read_sql_table(
+        "testTable",
+        con=engine)
+    X = table_df.iloc[:,0]
+    Y1 = table_df.iloc[:,1]
+    plt.plot(figsize=(6,4))
+    plt.plot(X,Y1, 'o', color='black', label=('Test')) 
+    plt.xlabel('x-Values')
+    plt.ylabel('y-Values')
+    plt.legend()
+    plt.grid(True)
+    plt.show
+    plt.figure()
+
     for x in range(0,4):
         X = df1.iloc[:,0]
         Y1 = df1.iloc[:,x+1]
         Y2 = df2.iloc[:,minvalue_series[x]]
-        fig.plot(X,Y1, color='#8A0808', linestyle='--',label='Original')
-        fig.plot(X,Y2, color='#0B610B', linestyle='-',label='Bestfit')
-        fig.title('Original + Ideal line')
-        fig.xlabel('x-Values')
-        fig.ylabel('y-Values')
-        fig.legend()
-        fig.grid(True)
-        fig.show
+        plt.plot(X,Y1, color='#8A0808', linestyle='--',label='Original')
+        plt.plot(X,Y2, color='#0B610B', linestyle='-',label='Bestfit')
+        plt.title('Original + Ideal line')
+        plt.xlabel('x-Values')
+        plt.ylabel('y-Values')
+        plt.legend()
+        plt.grid(True)
+        plt.show
+    return minvalue_series
 
+def mergeTestAndIdeal(Row, Index, table_df):
+    import pandas as pd
+    import sqlalchemy as db
+    from sqlalchemy import engine
+    engine = create_engine('sqlite:///ForCalc.db')
+    TestX = table_df.iloc[Row-1,0]
+    TestY = table_df.iloc[Row-1,1]
+    Testdf = pd.DataFrame({'x': [TestX],'y': [TestY]})
+    table_name = "idealTable"
+    table_df2 = pd.read_sql_table(
+    table_name,
+    con=engine)
+    mergedTestAndIdealdf = pd.DataFrame
+    Testdf = pd.merge(Testdf,table_df2.iloc[:,:51], on="x",how="left")
+    IdealY = Testdf.iloc[0, Index+1]
+    DeltaY = abs(IdealY - TestY)              
+    Mergeddf = pd.DataFrame({'x': [TestX],'yTest': [TestY], 'yIdeal': [IdealY], 'Delta': [DeltaY]})
+    return(TestX, TestY, IdealY, DeltaY)
+    
+def LoadTablefromDB(): 
+    import pandas as pd
+    import sqlalchemy as db
+    import urllib
+    import pyodbc
+    import csv
+    import chardet
+    import decimal
+    from decimal import Decimal
+    from sqlalchemy import create_engine
+    engine = create_engine('sqlite:///ForCalc.db')
+    table_name = "testTable"
+    table_df = pd.read_sql_table(
+    table_name,
+    con=engine)
+    return(table_df)
+
+def SaveRow(TestX, TestY, DeltaY, index): 
+    import sqlalchemy as db
+    from sqlalchemy import Integer
+    from sqlalchemy import create_engine, Integer, Column, String, Float, MetaData, Table
+    from sqlalchemy.orm import sessionmaker
+    from sqlalchemy.ext.declarative import declarative_base
+
+    engine = create_engine('sqlite:///ForCalc.db')
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    meta = MetaData()
+    Base = declarative_base()
+
+    class tresults(Base):
+        __tablename__= 'Tresults'
+        x = Column(Float, primary_key=True)
+        Testy = Column(Float)
+        Delta = Column(Float)
+        IndexIdeal = Column(Float)
+
+    solution1 = tresults(x = TestX, Testy = TestY, Delta = DeltaY, IndexIdeal = index)
+    session.add(solution1)
+    session.commit()
+
+def plottable1(tablename, columncount):
+    import matplotlib.pyplot as plt
+    import pandas as pd
+
+    engine = create_engine('sqlite:///ForCalc.db')
+    table_df = pd.read_sql_table(
+        tablename,
+        con=engine)
+    plt.figure()
+    for n in range(1, columncount):
+        X = table_df.iloc[:,0]
+        Y1 = table_df.iloc[:,n]
+        plt.plot(figsize=(6,4))
+        plt.plot(X,Y1, color='#8A0808', linestyle='--',label=('Y' + str(n) ))
+    
+    plt.title(tablename + "dataset")
+    plt.xlabel('x-Values')
+    plt.ylabel('y-Values')
+    plt.legend()
+    plt.grid(True)
+    plt.show
+
+def plottable2(tablename, columncount):
+    import matplotlib.pyplot as plt
+    import pandas as pd
+
+    engine = create_engine('sqlite:///ForCalc.db')
+    table_df = pd.read_sql_table(
+        tablename,
+        con=engine)
+    plt.figure()
+    for n in range(1, columncount):
+        X = table_df.iloc[:,0]
+        Y1 = table_df.iloc[:,n]
+        plt.plot(figsize=(6,4))
+        #plt.plot(X,Y1, color='#8A0808', linestyle='--',label=('Y' + str(n) ))
+        plt.plot(X,Y1, 'o', color='black', label=('Y' + str(n))) 
+    plt.title(tablename + "dataset")
+    plt.xlabel('x-Values')
+    plt.ylabel('y-Values')
+    plt.legend()
+    plt.grid(True)
+    plt.show
+    
