@@ -1,7 +1,5 @@
 #%%
 import sqlalchemy as db
-import math  
-import sklearn.metrics
 from sqlalchemy import Table, Column, Integer, String, Float
 from func import *
 import sqlite3 as mdb
