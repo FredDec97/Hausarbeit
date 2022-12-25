@@ -1,6 +1,5 @@
 #%%
-import sqlalchemy as db
-from sqlalchemy import Table, Column, Integer, String, Float
+from sqlalchemy import Column, Integer, String, Float
 from func import *
 import sqlite3
 from sqlite3 import connect
@@ -17,8 +16,8 @@ train.csvname = "train.csv"
 sqliteConnection = sqlite3.connect('ForCalc.db')
 cursor = sqliteConnection.cursor()
 testXX = "ForCalc.db"
-readCSVloadData(ideal.csvname, ideal.tablename, sqliteConnection, cursor, 51, 0)
-readCSVloadData(train.csvname, train.tablename, sqliteConnection, cursor, 5, 0)
+readCSVloadData(ideal.csvname, ideal.tablename, sqliteConnection, cursor, 51, 2)
+readCSVloadData(train.csvname, train.tablename, sqliteConnection, cursor, 5, 2)
 readCSVloadData(test.csvname, test.tablename, sqliteConnection, cursor, 2, 1)
 #identifyideal(sqliteConnection, train.tablename, ideal.tablename)
 minvalue_series = identifyideal(sqliteConnection, train.tablename, ideal.tablename)
@@ -26,11 +25,11 @@ minvalue_series = identifyideal(sqliteConnection, train.tablename, ideal.tablena
 for n in range(0, 4):
     print(minvalue_series[n])
     for i in range(0, 100):
-        table_df = LoadTablefromDB()
+        table_df = LoadTablefromDB(test.tablename)
         TestX, TestY, IdealY, DeltaY = mergeTestAndIdeal(int(i), minvalue_series[n], table_df)
         if float(DeltaY) < math.sqrt(2): 
             SaveRow(TestX, TestY, DeltaY, minvalue_series[n])
-print("Script finished successfully, please find the solution table in the Database")
+print("Script finished successfully, please find the solution table with the name tresults in the Database")
 
 
 # %%
