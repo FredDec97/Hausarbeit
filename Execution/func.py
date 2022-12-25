@@ -8,20 +8,20 @@ def chk_conn(connx):
         print(e)
         print("No active connection to DB")
 
-def connectToDB():
-    import sqlalchemy as db
-    from sqlalchemy_utils import database_exists, create_database
-    from sqlalchemy import create_engine
-    from sqlalchemy_utils import database_exists, create_database
-    from sqlalchemy import Table, Column, Integer, String, Float
-    from sqlalchemy.ext.declarative import declarative_base
-    from sqlalchemy.orm import mapper
-    from sqlalchemy.orm import sessionmaker
-    from sqlalchemy.orm import relationship
-    engine = create_engine('sqlite:///ForCalc.db')
-    base = declarative_base()
-    conn = engine.connect()
-    return engine, base, conn
+# def connectToDB():
+#     import sqlalchemy as db
+#     from sqlalchemy_utils import database_exists, create_database
+#     from sqlalchemy import create_engine
+#     from sqlalchemy_utils import database_exists, create_database
+#     from sqlalchemy import Table, Column, Integer, String, Float
+#     from sqlalchemy.ext.declarative import declarative_base
+#     from sqlalchemy.orm import mapper
+#     from sqlalchemy.orm import sessionmaker
+#     from sqlalchemy.orm import relationship
+#     engine = create_engine('sqlite:///ForCalc.db')
+#     base = declarative_base()
+#     conn = engine.connect()
+#     return engine, base, conn
 
 def readCSVloadData(csvname, tablename, conn, cursor, ccount, scatter):
     import pandas as pd
@@ -32,12 +32,20 @@ def readCSVloadData(csvname, tablename, conn, cursor, ccount, scatter):
             df.sort_values(["x"],axis=0, ascending=True,inplace=True,na_position='first')
             df.to_sql(tablename, con= conn, index = False, if_exists = 'replace')
     except FileNotFoundError as e:
-        print("File was not found, please save the file with the right name on the right spot")
-    else: print("done")
+        returnvalue = 0
+        print("File was not found, please save the file with the right name on the right location")
+    else:
+        print("File was found and script can be continued")
+        returnvalue = 1
     if scatter == 1:
         plottable2(tablename, ccount)
-    else: plottable1(tablename, ccount)  
+    else:
+        if scatter == 2:
+            plottable1(tablename, ccount)
+        else:
+            print("No plot requiered") 
     print(chk_conn(cursor))
+    return returnvalue
 
 import sqlalchemy as db
 from func import *
@@ -242,18 +250,12 @@ def mergeTestAndIdeal(Row, Index, table_df):
     Mergeddf = pd.DataFrame({'x': [TestX],'yTest': [TestY], 'yIdeal': [IdealY], 'Delta': [DeltaY]})
     return(TestX, TestY, IdealY, DeltaY)
     
-def LoadTablefromDB(): 
+def LoadTablefromDB(table_name): 
     import pandas as pd
     import sqlalchemy as db
-    import urllib
-    import pyodbc
-    import csv
-    import chardet
-    import decimal
     from decimal import Decimal
     from sqlalchemy import create_engine
     engine = create_engine('sqlite:///ForCalc.db')
-    table_name = "testTable"
     table_df = pd.read_sql_table(
     table_name,
     con=engine)
