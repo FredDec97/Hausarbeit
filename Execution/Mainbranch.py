@@ -25,6 +25,8 @@ readCSVloadData(train.csvname, train.tablename, sqliteConnection, cursor, 5, 2) 
 readCSVloadData(test.csvname, test.tablename, sqliteConnection, cursor, 2, 1)  # Read and load data from CSV to db using a function, plots dataset
 minvalue_series = identifyideal(train.tablename, ideal.tablename) # Identifies the matching ideal functions and plots the results
 
+
+drop_table('Tresults')  # Delte Tresults, to generate new Table with latest solution
 for n in range(0, 4):  # For loop the range of 0:4 stands for the 4 ideal functions
     for i in range(0, 100):  # For loop the range of 0:100 stands for the 100 test datasets 
         table_df = LoadTablefromDB(test.tablename)  # Calls function and loads test data from database and save in df 

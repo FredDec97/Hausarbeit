@@ -1,0 +1,21 @@
+import sqlite3
+def chk_conn(connx):
+    import sqlite3 as mdb
+    try:
+        connx.cursor()  # Try to connect to db
+        return True  # Return is used for unittest
+    except Exception as e:  # If no active connection, exception is raised
+        print(e)  
+        print("No active connection to DB") 
+        return False  # Return is used for unittest
+        
+
+def chk_conn2(connx):
+    import sqlite3 as mdb
+    connx.cursor()  # Try to connect to db
+    return True  # Return is used for unittest
+sqliteConnection = sqlite3.connect('ForCalc.db')  # Conencting to sqllite
+cursor = sqliteConnection.cursor()  # Creating a cursor object using the cursor() method
+
+sqliteConnection.close()
+print(chk_conn(cursor))

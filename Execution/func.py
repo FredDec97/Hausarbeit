@@ -35,6 +35,7 @@ def chk_conn(connx):
     '''
 def readCSVloadData(csvname, tablename, conn, cursor, ccount, scatter):
     import pandas as pd
+    import sqlite3 as mdb
     from sqlalchemy import desc
     try:
         with open(csvname) as f:  # Open CSV file
@@ -54,7 +55,8 @@ def readCSVloadData(csvname, tablename, conn, cursor, ccount, scatter):
             plottable1(tablename, ccount)  # If scatter value equals 2, data is plotted as linegraph
         else:
             print("No plot requiered") # If scatter value does not equal 1 or 2, no plot is requiered and a statement is printed instead
-    print(chk_conn(cursor))  # Function is called to check connection
+            
+    print(chk_conn(mdb.connect('ForCalc.db')))  # Function is called to check connection
     return returnvalue
 
 import sqlalchemy as db
@@ -178,9 +180,7 @@ def identifyideal(table_name, table_name2):
     '''
     for x in range(0,4):
         X = df1.iloc[:,0]  # Definition of x-values for the plot
-        #Y1 = df1.iloc[:,x+1]
         Y2 = df2.iloc[:,minvalue_series[x]]  # Definition of y-values for the ideal line
-        #plt.plot(X,Y1, color='#8A0808', linestyle='--',label='Original')
         plt.plot(X,Y2, color='#0B610B', linestyle='-',label='Bestfit'+ str(x+1))
         plt.title('Ideal and Test')
         plt.xlabel('x-Values')
@@ -361,3 +361,21 @@ def plottable2(tablename, columncount):
     plt.grid(True)
     plt.show
     
+'''
+This function deletes a table from db.
+Passed argument:
+    table_name: Defines name of table that needs to be deleted
+'''
+def drop_table(table_name):
+    import logging
+    from sqlalchemy import MetaData
+    from sqlalchemy import create_engine
+    from sqlalchemy.engine.url import URL
+    from sqlalchemy.ext.declarative import declarative_base
+    engine = create_engine('sqlite:///ForCalc.db')
+    base = declarative_base()
+    metadata = MetaData(engine, reflect=True)
+    table = metadata.tables.get(table_name)
+    if table is not None:
+        logging.info(f'Deleting {table_name} table')
+        base.metadata.drop_all(engine, [table], checkfirst=True)
