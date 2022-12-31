@@ -5,20 +5,21 @@ The func_test.py includes unitstest for some functions in this sheet.
 '''
 
 '''
-This function tests if the conenction to the data base is active.
-If the connection is not active an excepteion is raised.
-The passed argument passes the corresponding cursor object of the conenction that should be checked
-The function returns "True" or "False" depending if the conenction is active or not
+Test if the conenction to the data base is active.
+Raises Exception if conenction is inactive.
+Passed argument: 
+    connx: Corresponding cursor object of the conenction
+Returns: "True" or "False" depending if the conenction is active or not
 '''
 def chk_conn(connx):
     import sqlite3 as mdb
     try:
         connx.cursor()  # Try to connect to 
         return True  # Return is used for unittest
-    except Exception as e:  # if no active connection, exception is raised
+    except Exception as e:  # If no active connection, exception is raised
+        print(e)  
+        print("No active connection to DB") 
         return False  # Return is used for unittest
-        print(e)  # Prints Error
-        print("No active connection to DB")  # Prionts own explaination
 
 '''
     Function "readCSVloadData" opens, reads, sorts data from CSV, and saves data in sql table.
@@ -36,24 +37,24 @@ def readCSVloadData(csvname, tablename, conn, cursor, ccount, scatter):
     import pandas as pd
     from sqlalchemy import desc
     try:
-        with open(csvname) as f:  # open CSV file
-            df = pd.read_csv(csvname, skiprows = 0)  # read CSV file
-            df.sort_values(["x"],axis=0, ascending=True,inplace=True,na_position='first')  # read values
-            df.to_sql(tablename, con= conn, index = False, if_exists = 'replace')  # load data to SQL table
+        with open(csvname) as f:  # Open CSV file
+            df = pd.read_csv(csvname, skiprows = 0)  # Read CSV file
+            df.sort_values(["x"],axis=0, ascending=True,inplace=True,na_position='first')  # Read values
+            df.to_sql(tablename, con= conn, index = False, if_exists = 'replace')  # Load data to SQL table
     except FileNotFoundError as e:  # Raise Exception if file was not found
         returnvalue = 0
-        print("File was not found, please save the file with the right name on the right location")  # print solution for error
+        print("File was not found, please save the file with the right name on the right location")  # Print solution for error
     else:
         print("File was found and script can be continued")
         returnvalue = 1
     if scatter == 1:  
-        plottable2(tablename, ccount)  # if scatter value equals 1, data is plotted as scatterplot
+        plottable2(tablename, ccount)  # If scatter value equals 1, data is plotted as scatterplot
     else:
         if scatter == 2:
-            plottable1(tablename, ccount)  # if scatter value equals 2, data is plotted as linegraph
+            plottable1(tablename, ccount)  # If scatter value equals 2, data is plotted as linegraph
         else:
-            print("No plot requiered") # if scatter value does not equal 1 or 2, no plot is requiered and a statement is printed instead
-    print(chk_conn(cursor))  # function is called to check connection
+            print("No plot requiered") # If scatter value does not equal 1 or 2, no plot is requiered and a statement is printed instead
+    print(chk_conn(cursor))  # Function is called to check connection
     return returnvalue
 
 import sqlalchemy as db
@@ -75,17 +76,13 @@ class FromCSV(Tabelle):
     x = db.Column(db.Float, primary_key=True)
     y1 = db.Column(db.Float, nullable=False)
 
-'''
-The Trainclass is based on the FromCSV class and adds exact as many column attributes as are need for the train table later on
-'''
+'''The Trainclass is based on the FromCSV class and adds exact as many column attributes as are need for the train table later on'''
 class Trainclass(FromCSV):
     y2 = db.Column(db.Float, nullable=False)
     y3 = db.Column(db.Float, nullable=False)
     y4 = db.Column(db.Float, nullable=False)
 
-'''
-The Idealclass is based on the Trainclass class and adds exact as many column attributes as are need for the Ideal table later on
-'''
+'''The Idealclass is based on the Trainclass class and adds exact as many column attributes as are need for the Ideal table later on'''
 class Idealclass(Trainclass):
     y5 = db.Column(db.Float, nullable=False)
     y6 = db.Column(db.Float, nullable=False)
@@ -148,7 +145,7 @@ class Idealclass(Trainclass):
 '''
 The "identifyideal"-function identifies the function with lowest mse compared to every training function.
 The ideal function is plotted with the corresponding training function.
-The index of 4 ideal functions are returned
+Return: Index of the 4 ideal functions
 Passed arguments:
     table_name: Passes the name of the table with the train functions
     table_name2:Passes the name of the table with the ideal function
@@ -253,9 +250,10 @@ def mergeTestAndIdeal(Row, Index, table_df):
     return(TestX, TestY, IdealY, DeltaY)  # Return variables
     
 '''
-The "LoadTablefromDB" function loads the data from a defined table(arguments) and saves it in a df.
-Passed argument: table_name: passes name of a sql table in predefined db.
-Returns data from sql table as a df.
+The "LoadTablefromDB" function loads the data from a defined table and saves it in a df.
+Passed argument:
+    table_name: passes name of a sql table in predefined db.
+Return: Data from sql table as a df.
 '''
 def LoadTablefromDB(table_name): 
     import pandas as pd
@@ -281,7 +279,7 @@ Passed arguments:
 '''
 def SaveRow(TestX, TestY, DeltaY, index):
     import sqlalchemy 
-    from sqlalchemy import create_engine, Column, Float, String #, MetaData
+    from sqlalchemy import create_engine, Column, Float, String
     from sqlalchemy.orm import sessionmaker
     from sqlalchemy.ext.declarative import declarative_base
 
@@ -307,7 +305,7 @@ def SaveRow(TestX, TestY, DeltaY, index):
 
 '''
 The "plottable1" function loads data in a df and plots with predefined settings. 
-Result is or more line graphs.
+Result: One or more line graphs.
 Passed arguments:
     tablename: Name of the table that should be plotted
     columcount: Number of columns that need to be plotted
@@ -337,7 +335,7 @@ def plottable1(tablename, columncount):
 '''
 The "plottable2" function loads data in a df and plots with predefined settings.
 Difference to "plottable1" function: Instead of linegraphs, scatterplots are generated.
-Result is one or more scatterplot.
+Result: One or more scatterplot.
 Passed arguments:
     tablename: Name of the table that should be plotted
     columcount: Number of columns that need to be plotted
